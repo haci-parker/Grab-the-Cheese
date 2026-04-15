@@ -44,6 +44,18 @@ public class ItemDropZone : MonoBehaviour, IDropHandler
                     Debug.Log("[ItemDropZone] Destek drop edildi → destek_arrow kapatıldı, tahta_arrow ve tahta_collider açıldı!");
                 }
 
+                // Tahta drop edildiğinde: tahta arrowu kapat ve current artır
+                if (draggedItem.itemTag == "tahta")
+                {
+                    GameObject tahtaArrow = FindByName("tahta_in_panel_arrow");
+                    if (tahtaArrow != null) tahtaArrow.SetActive(false);
+
+                    StoryDialogueManager manager = FindObjectOfType<StoryDialogueManager>();
+                    if (manager != null) manager.IncrementCurrent();
+
+                    Debug.Log("[ItemDropZone] Tahta drop edildi → tahta_arrow kapatıldı, current artırıldı!");
+                }
+
                 // Başarılı drop — collider objesini (kendimizi) gizle
                 Debug.Log($"[ItemDropZone] '{draggedItem.gameObject.name}' başarıyla bırakıldı → '{gameObject.name}' gizleniyor!");
                 gameObject.SetActive(false);

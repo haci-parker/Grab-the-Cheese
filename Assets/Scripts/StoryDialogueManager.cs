@@ -278,6 +278,15 @@ public class StoryDialogueManager : MonoBehaviour
             if (arrowMouseLocationObj.activeSelf != showArrowMouse)
                 arrowMouseLocationObj.SetActive(showArrowMouse);
         }
+
+        // current >= 23 olunca drag_drop_direction kapat, ileri_direction aç
+        GameObject dragDropDir = GO("drag_drop_direction");
+        GameObject ileriDir = GO("ileri_direction");
+        if (current >= 23)
+        {
+            if (dragDropDir != null && dragDropDir.activeSelf) dragDropDir.SetActive(false);
+            if (ileriDir != null && !ileriDir.activeSelf) ileriDir.SetActive(true);
+        }
     }
 
     // İleri butonu
@@ -750,10 +759,24 @@ public class StoryDialogueManager : MonoBehaviour
         if (destekInPanelArrow != null) destekInPanelArrow.SetActive(true);
         if (destekCollider != null) destekCollider.SetActive(true);
 
-        Debug.Log("[StoryDialogueManager] item_panel_in_mouse_movement, destek_in_panel_arrow ve destek_collider aktif edildi!");
+        // keyboard_direction kapat, drag_drop_direction aç
+        GameObject keyboardDirection = GO("keyboard_direction");
+        GameObject dragDropDirection = GO("drag_drop_direction");
+
+        if (keyboardDirection != null) keyboardDirection.SetActive(false);
+        if (dragDropDirection != null) dragDropDirection.SetActive(true);
+
+        Debug.Log("[StoryDialogueManager] item_panel_in_mouse_movement, destek_in_panel_arrow, destek_collider ve drag_drop_direction aktif edildi! keyboard_direction kapatıldı!");
 
         current++;
         Debug.Log($"[StoryDialogueManager] arrow_mouse_location gizlendi, current = {current} (mouse stopper'a değdi)!");
+    }
+
+    // Dışarıdan current'ı artırmak için (örn: tahta drop edildiğinde)
+    public void IncrementCurrent()
+    {
+        current++;
+        Debug.Log($"[StoryDialogueManager] current artırıldı → {current}");
     }
 
     void Show(params GameObject[] objs) { foreach (var o in objs) if (o) o.SetActive(true); }
