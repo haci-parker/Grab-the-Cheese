@@ -22,6 +22,16 @@ public class StoryDialogueManager : MonoBehaviour
     private bool shouldPulseCanta = false;
     private float pulseCantaTimer = 0f;
 
+    // Arrow objeleri
+    private GameObject arrowKulaklikObj;
+    private GameObject arrowCantaObj;
+    private bool arrowKulaklikDismissed = false;
+    private bool arrowCantaDismissed = false;
+
+    // Arrow mouse location
+    private GameObject arrowMouseLocationObj;
+    private bool arrowMouseLocationDismissed = false;
+
     // Seçenek Butonları
     private Button choice1Btn;
     private Button choice2Btn;
@@ -88,6 +98,13 @@ public class StoryDialogueManager : MonoBehaviour
         GameObject cantaPaneli   = GO("canta_paneli");
         GameObject arrowKulaklik = GO("arrow_kulaklik");
         GameObject arrowCanta    = GO("arrow_canta");
+
+        // Arrow objelerini class seviyesinde sakla
+        arrowKulaklikObj = arrowKulaklik;
+        arrowCantaObj = arrowCanta;
+
+        // Arrow mouse location objesini bul
+        arrowMouseLocationObj = GO("arrow_mouse_location");
         GameObject oldMice       = GO("old_mice");
         GameObject oldMiceHappy  = GO("old_mice_happy");
         GameObject introScreenBg1 = GO("intro_screen_bg1");
@@ -103,7 +120,7 @@ public class StoryDialogueManager : MonoBehaviour
         GameObject bg2Text4 = transparentBrownPanel != null ? transparentBrownPanel.transform.Find("text4")?.gameObject : null;
 
         // Tüm objeleri kaydet (geri giderken sıfırlamak için) — bg2 objeleri de dahil
-        allObjects = new GameObject[] { text1,text2,text3,text4,text5,text6,text7,text8,text9,text10,text11, buttonIleri,buttonTabi,kulaklikAlma,cantaAlma,kulaklikPaneli,cantaPaneli,oldMice,oldMiceHappy, excitedMouse,calmMouse,transparentBrownPanel,bg2Text1,bg2Text2,bg2Text3,bg2Text4, arrowKulaklik,arrowCanta };
+        allObjects = new GameObject[] { text1,text2,text3,text4,text5,text6,text7,text8,text9,text10,text11, buttonIleri,buttonTabi,kulaklikAlma,cantaAlma,kulaklikPaneli,cantaPaneli,oldMice,oldMiceHappy, excitedMouse,calmMouse,transparentBrownPanel,bg2Text1,bg2Text2,bg2Text3,bg2Text4, arrowKulaklik,arrowCanta,arrowMouseLocationObj };
 
         steps = new System.Action[]
         {
@@ -237,6 +254,30 @@ public class StoryDialogueManager : MonoBehaviour
         bool showMouseMovement = (current >= 21);
         if (mouseMovementObj != null && mouseMovementObj.activeSelf != showMouseMovement)
             mouseMovementObj.SetActive(showMouseMovement);
+
+        // arrow_kulaklik: current >= 12 olunca göster, button_kulaklik basılınca gizle
+        if (arrowKulaklikObj != null)
+        {
+            bool showArrowKulaklik = (current >= 12) && !arrowKulaklikDismissed;
+            if (arrowKulaklikObj.activeSelf != showArrowKulaklik)
+                arrowKulaklikObj.SetActive(showArrowKulaklik);
+        }
+
+        // arrow_canta: current >= 16 olunca göster, button_canta basılınca gizle
+        if (arrowCantaObj != null)
+        {
+            bool showArrowCanta = (current >= 16) && !arrowCantaDismissed;
+            if (arrowCantaObj.activeSelf != showArrowCanta)
+                arrowCantaObj.SetActive(showArrowCanta);
+        }
+
+        // arrow_mouse_location: current >= 21 olunca göster, mouse_movement_stoper'a değince gizle
+        if (arrowMouseLocationObj != null)
+        {
+            bool showArrowMouse = (current >= 21) && !arrowMouseLocationDismissed;
+            if (arrowMouseLocationObj.activeSelf != showArrowMouse)
+                arrowMouseLocationObj.SetActive(showArrowMouse);
+        }
     }
 
     // İleri butonu
@@ -454,6 +495,11 @@ public class StoryDialogueManager : MonoBehaviour
         }
         Debug.Log("[StoryDialogueManager] shouldPulse = false, renk değişimi durduruldu!");
 
+        // arrow_kulaklik'i gizle
+        arrowKulaklikDismissed = true;
+        if (arrowKulaklikObj != null) arrowKulaklikObj.SetActive(false);
+        Debug.Log("[StoryDialogueManager] arrow_kulaklik gizlendi!");
+
         if (current == 12)
         {
             current = 13;
@@ -599,6 +645,11 @@ public class StoryDialogueManager : MonoBehaviour
         }
         Debug.Log("[StoryDialogueManager] shouldPulseCanta = false, envanter renk değişimi durduruldu!");
 
+        // arrow_canta'yı gizle
+        arrowCantaDismissed = true;
+        if (arrowCantaObj != null) arrowCantaObj.SetActive(false);
+        Debug.Log("[StoryDialogueManager] arrow_canta gizlendi!");
+
         if (current == 16)
         {
             GameObject itemPanel = GO("item_panel");
@@ -682,6 +733,27 @@ public class StoryDialogueManager : MonoBehaviour
         GameObject info1 = GO("info1");
         if (info1 != null) info1.SetActive(false);
         Debug.Log("[StoryDialogueManager] info1 paneli kapatıldı!");
+    }
+
+    // Mouse stopper'a değince arrow_mouse_location'ı kapat ve drag-drop panelini aç
+    public void DismissArrowMouseLocation()
+    {
+        arrowMouseLocationDismissed = true;
+        if (arrowMouseLocationObj != null) arrowMouseLocationObj.SetActive(false);
+
+        // Drag-drop panelini, destek ok işaretini ve destek collider'ını aktif et
+        GameObject itemPanelInMouseMovement = GO("item_panel_in_mouse_movement");
+        GameObject destekInPanelArrow = GO("destek_in_panel_arrow");
+        GameObject destekCollider = GO("destek_collider");
+
+        if (itemPanelInMouseMovement != null) itemPanelInMouseMovement.SetActive(true);
+        if (destekInPanelArrow != null) destekInPanelArrow.SetActive(true);
+        if (destekCollider != null) destekCollider.SetActive(true);
+
+        Debug.Log("[StoryDialogueManager] item_panel_in_mouse_movement, destek_in_panel_arrow ve destek_collider aktif edildi!");
+
+        current++;
+        Debug.Log($"[StoryDialogueManager] arrow_mouse_location gizlendi, current = {current} (mouse stopper'a değdi)!");
     }
 
     void Show(params GameObject[] objs) { foreach (var o in objs) if (o) o.SetActive(true); }

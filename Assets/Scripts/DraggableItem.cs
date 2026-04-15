@@ -11,6 +11,19 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
     private Transform originalParent;
     private Vector3 originalLocalPos;
 
+    [Header("Drag-Drop Ayarları")]
+    [Tooltip("Bu objeyi tanımlayan etiket (örn: 'destek', 'tahta')")]
+    public string itemTag = "";
+
+    [Tooltip("Bu obje başarılı drop edildiğinde aktif olacak GameObject")]
+    public GameObject activateOnDrop;
+
+    [Tooltip("Bu objenin sürüklenebilmesi için önce tamamlanması gereken DraggableItem (sıralama için)")]
+    public DraggableItem prerequisite;
+
+    /// <summary>Bu obje başarıyla drop edildi mi?</summary>
+    [HideInInspector] public bool isDropped = false;
+
     private void Awake()
     {
         rectTransform = GetComponent<RectTransform>();
@@ -21,6 +34,21 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
 
     public void OnBeginDrag(PointerEventData eventData)
     {
+        // Eğer önkoşul varsa ve henüz tamamlanmadıysa sürüklemeye izin verme
+        if (prerequisite != null && !prerequisite.isDropped)
+        {
+            Debug.Log($"[DraggableItem] '{gameObject.name}' henüz sürüklenemez! Önce '{prerequisite.gameObject.name}' yerleştirilmeli.");
+            eventData.pointerDrag = null; // Sürüklemeyi iptal et
+            return;
+        }
+
+        // Zaten drop edildiyse tekrar sürüklemeye izin vermeyelim
+        if (isDropped)
+        {
+            eventData.pointerDrag = null;
+            return;
+        }
+
         // Sürükleme başlarken eski konumunu ve babasını (kutusunu) hafızaya al
         originalParent = transform.parent;
         originalLocalPos = rectTransform.localPosition;
@@ -56,6 +84,20 @@ public class DraggableItem : MonoBehaviour, IBeginDragHandler, IDragHandler, IEn
             // Eğer yeni bir DropZone hedefine bırakıldıysa (parentAfterDrag değiştiyse)
             // Tam o yuvanın merkezine şak diye yapıştırılsın! (Magnet Etkisi)
             rectTransform.localPosition = Vector3.zero;
+
+            // Başarılı drop!
+            isDropped = true;
+
+            // activateOnDrop atanmışsa aktif et
+            if (activateOnDrop != null)
+            {
+                activateOnDrop.SetActive(true);
+                Debug.Log($"[DraggableItem] '{gameObject.name}' drop edildi → '{activateOnDrop.name}' aktif edildi!");
+            }
+
+            // Drop edildikten sonra tekrar sürüklemeyi devre dışı bırak
+            canvasGroup.blocksRaycasts = false;
+            return;
         }
 
         // Tıklamaları tekrar aç ki obje tekrar sürüklemeye müsait olsun
